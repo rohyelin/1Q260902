@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pydantic-settings
+pymupdf
+openai
+tiktoken
+numpy
+rank-bm25
+scikit-learn
+requests

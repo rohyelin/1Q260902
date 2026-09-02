@@ -1,0 +1,14 @@
+backend/.env
+backend/.venv/
+backend/storage/
+frontend/node_modules/
+frontend/.next/
+frontend/tsconfig.tsbuildinfo
+
+# 노션 동기화 작업 부산물
+.sync_tmp/
+.sync_backend.log
+
+__pycache__/
+*.pyc
+.DS_Store

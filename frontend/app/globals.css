@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #FAFAF7;
+  --foreground: #3F3F46;
+  --brand: #C4A55F;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+}
+
+/* 영문·숫자는 Helvetica, 한글은 뒤쪽 폰트로 폴백된다.
+   tailwind.config.ts 의 fontFamily.sans 와 순서를 맞춰 둘 것. */
+.font-sans {
+  font-family: "Helvetica Neue", Helvetica, var(--font-sans),
+    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+
+/* ─────────────────────────────────────────────
+   인쇄 (브라우저 → PDF로 저장)
+   ───────────────────────────────────────────── */
+@media print {
+  /* 세로 A4 두 장 대신 가로 A4 한 장. 펼친 책처럼 좌우가 이어져 보인다. */
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+
+  /* 가로 A4 210mm - 위아래 여백 24mm = 인쇄 가능 높이 186mm.
+     한 장을 조금이라도 넘기면 뒤에 빈 장이 딸려 나오므로
+     여유 12mm 를 남기고 174mm 로 잡는다. */
+  .print-slide {
+    height: 174mm;
+    overflow: hidden;
+  }
+
+  /* 부록(정리본·퀴즈)은 분량만큼 늘어나야 하므로 고정하지 않는다 */
+  .print-flow {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  /* 배경색·하이라이트를 인쇄에도 그대로 반영 */
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  /* 인쇄에서 뺄 요소 (버튼·네비게이션 등) */
+  .no-print {
+    display: none !important;
+  }
+
+  /* 제목·머리말이 페이지 끝에 홀로 남지 않도록 */
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  p,
+  li {
+    orphans: 2;
+    widows: 2;
+  }
+
+  img {
+    break-inside: avoid;
+  }
+}
