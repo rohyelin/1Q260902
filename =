@@ -1,0 +1,16 @@
+Script started on Thu Sep  3 22:04:20 2026
+Command: f
+    tell application "Messages"
+        set svc to 1st service whose service type = iMessage
+        send "{msg}" to buddy "{MY_NUMBER}" of svc
+    end tell
+    
+script: f
+    tell application "Messages"
+        set svc to 1st service whose service type = iMessage
+        send "{msg}" to buddy "{MY_NUMBER}" of svc
+    end tell
+    : No such file or directory
+
+Command exit status: 1
+Script done on Thu Sep  3 22:04:20 2026

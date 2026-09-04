@@ -55,6 +55,12 @@ _PLACEHOLDER_TITLE_RE = re.compile(
 # 뒤 슬라이드의 앵커가 앞으로 끌려간다(실측: 7칸·10칸 빠름).
 REINTRO_GAP = 6
 
+# 슬라이드 한 장 분량을 건너뛸 때 물릴 벌점.
+# 조각 수가 아니라 '슬라이드 몇 장어치를 건너뛰는가'를 기준으로 삼아,
+# 조각을 잘게 쪼개도 기준이 흔들리지 않게 한다.
+# (예전 고정값 0.015 는 조각 61개 기준이었고, 254개가 되자 4배로 가혹해졌다)
+JUMP_PENALTY_PER_PAGE = 0.035
+
 MIN_MATCH_SCORE = 0.35
 # 이 값보다 페이지 최고 유사도가 낮으면 "미설명 슬라이드"로 보고 매칭하지 않는다.
 UNMATCHED_SCORE = 0.14
@@ -189,7 +195,7 @@ def compute_final_scores(
 def _align_anchors_dp(
     scores: np.ndarray,
     stay_penalty: float = 0.03,
-    jump_penalty: float = 0.015,
+    jump_penalty: float | None = None,
 ) -> list[int]:
     """전역 최적 monotonic 정렬 (DTW 방식 DP).
 
@@ -197,11 +203,25 @@ def _align_anchors_dp(
     전체 점수 합을 최대화하는 anchor 경로를 찾는다.
     한 chunk는 최대 2개의 연속 페이지에서만 anchor가 될 수 있다
     (state 0 = 새로 진입, state 1 = 두 번째 연속 사용).
-    새 chunk로 전진할 때 건너뛴 chunk 수에 비례해 jump_penalty를 부과하여,
-    신호가 약한 구간에서 수십 분을 한 번에 건너뛰는 것을 억제한다.
-    greedy와 달리 한 페이지의 노이즈가 전체 경로를 오염시키지 않는다.
+
+    ── jump_penalty 를 조각 밀도에 맞춰 자동으로 정하는 이유 ──────────────
+    건너뛴 조각 수에 비례해 벌점을 매겨, 신호가 약한 구간에서 한 번에
+    수십 분을 뛰어넘는 것을 막는다. 그런데 이 값이 고정이면 조각 크기가
+    바뀔 때 의미가 달라진다.
+
+    실측(종양관리 24장 / 254조각):
+      조각을 문장 단위로 잘게 쪼개면서 조각 수가 61 → 254 로 4배가 되었다.
+      같은 시간을 건너뛰는 데 4배 벌점을 물게 되어, 교수님이 한 슬라이드를
+      오래 설명하면 다음 슬라이드가 따라가지 못했다.
+      그 밀림이 누적되어 오차가 +1 → +40 조각까지 벌어졌다.
+
+    그래서 "슬라이드 하나를 건너뛰는 비용"이 일정하도록 정규화한다.
     """
     n_pages, n_chunks = scores.shape
+    if jump_penalty is None:
+        # 슬라이드 한 장당 평균 조각 수. 이 값으로 나눠 밀도와 무관하게 만든다.
+        per_page = max(1.0, n_chunks / max(1, n_pages))
+        jump_penalty = JUMP_PENALTY_PER_PAGE / per_page
     NEG = -1e18
     # 페이지 수가 chunk 수의 2배를 넘으면 2연속 제한으로는 경로가 없으므로 완화
     allow_long_stay = n_pages > 2 * n_chunks
